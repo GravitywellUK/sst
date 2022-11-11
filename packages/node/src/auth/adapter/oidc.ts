@@ -70,6 +70,16 @@ export const OidcAdapter = /* @__PURE__ */ createAdapter(
         const params = Object.fromEntries(form.entries());
         const nonce = useCookie("auth-nonce");
         const state = useCookie("auth-state");
+
+        // ! Added by GW to fix "checks.state argument is missing" error on first Google auth call
+        // ! This redirects back to the authorize step, which seems to correctly apply the nonce & state cookies so this works
+        if (!nonce || !state) return {
+          statusCode: 302,
+          headers: {
+              location: "https://" + [useDomainName(), ...usePath().slice(0, -1), "authorize"].join("/")
+          }
+        };
+
         const tokenset = await client.callback(callback, params, {
           nonce,
           state,
